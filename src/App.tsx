@@ -1,6 +1,8 @@
 import { motion } from 'motion/react';
-import { Github, Linkedin, Mail, ArrowRight, ExternalLink, Code2, Palette, Globe, Download } from 'lucide-react';
-import { useState } from 'react';
+import { Github, Linkedin, Mail, ArrowRight, ExternalLink, Code2, Palette, Globe, Download, Sun, Moon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import type { FormEvent } from 'react';
+import emailjs from '@emailjs/browser';
 
 const colors = {
   beige: 'bg-brand-beige',
@@ -23,7 +25,7 @@ const ProjectCard = ({ project }: { project: { title: string; description: strin
   return (
   <motion.div 
     whileHover={{ y: -10 }}
-    className="bg-white/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-brand-light-green/30 shadow-sm"
+    className="bg-white/50 dark:bg-dark-card backdrop-blur-sm rounded-2xl overflow-hidden border border-brand-light-green/30 dark:border-dark-border shadow-sm"
   >
     <div className="aspect-video bg-brand-light-green/20 relative group overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center bg-brand-deep-forest/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
@@ -67,11 +69,11 @@ const ProjectCard = ({ project }: { project: { title: string; description: strin
       )}
     </div>
     <div className="p-6">
-      <h3 className="text-xl font-bold mb-2 text-brand-deep-forest">{project.title}</h3>
-      <p className="text-brand-dark-green/80 text-sm mb-4">{project.description}</p>
+      <h3 className="text-xl font-bold mb-2 text-brand-deep-forest dark:text-dark-text">{project.title}</h3>
+      <p className="text-brand-dark-green/80 dark:text-dark-muted text-sm mb-4">{project.description}</p>
       <div className="flex flex-wrap gap-2">
         {project.tags.map(tag => (
-          <span key={tag} className="px-3 py-1 bg-brand-light-green/30 text-brand-deep-forest text-xs rounded-full font-medium">
+          <span key={tag} className="px-3 py-1 bg-brand-light-green/30 dark:bg-dark-border text-brand-deep-forest dark:text-dark-text text-xs rounded-full font-medium">
             {tag}
           </span>
         ))}
@@ -83,6 +85,45 @@ const ProjectCard = ({ project }: { project: { title: string; description: strin
 
 export default function App() {
   const [activeNav, setActiveNav] = useState('home');
+  const [darkMode, setDarkMode] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleSend = async (e: FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    setSendError('');
+    try {
+      await emailjs.send(
+        'service_tdv66uc',
+        'template_rs38xjj',
+        {
+          from_name: formData.name,
+          from_email: formData.email,
+          message: formData.message,
+        },
+        '9dz-mBVjHwNVfDSlm'
+      );
+      setSent(true);
+      setFormData({ name: '', email: '', message: '' });
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      setSendError('Something went wrong. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -116,13 +157,27 @@ export default function App() {
       ],
       github: "https://github.com/JimboyLeyvva/Carventurer-Website",
     },
+    {
+      title: "Carventurer Game",
+      description: "A car adventure game built as a fun interactive project.",
+      tags: ["Game", "JavaScript"],
+      images: [
+        "/Image/Projects/Carventurer/Screenshot 2026-04-29 162832.png",
+        "/Image/Projects/Carventurer/Screenshot 2026-04-29 162839.png",
+        "/Image/Projects/Carventurer/Screenshot 2026-04-29 162848.png",
+        "/Image/Projects/Carventurer/Screenshot 2026-04-29 162859.png",
+        "/Image/Projects/Carventurer/Screenshot 2026-04-29 162917.png",
+        "/Image/Projects/Carventurer/Screenshot 2026-04-29 162926.png",
+      ],
+      github: "https://github.com/JimboyLeyvva/CARVENTURER",
+    },
   ];
 
   return (
-    <div className="relative">
+    <div className="relative dark:bg-dark-bg dark:text-dark-text transition-colors duration-300">
       {/* Navigation */}
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl">
-        <div className="bg-brand-deep-forest/90 backdrop-blur-md rounded-full px-6 py-3 flex items-center justify-between shadow-lg border border-white/10">
+        <div className="bg-brand-deep-forest/90 dark:bg-dark-surface/95 backdrop-blur-md rounded-full px-6 py-3 flex items-center justify-between shadow-lg border border-white/10">
           <div className="text-brand-beige font-display font-bold text-xl tracking-tight">PORTFOLIO</div>
           <div className="hidden md:flex gap-8">
             {navItems.map(item => (
@@ -138,12 +193,21 @@ export default function App() {
               </a>
             ))}
           </div>
-          <a href="#contact" className="md:hidden text-brand-beige"><Mail size={20} /></a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-brand-beige transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <a href="#contact" className="md:hidden text-brand-beige"><Mail size={20} /></a>
+          </div>
         </div>
       </nav>
 
       {/* Home Section */}
-      <Section id="home" className="section-padding bg-brand-beige">
+      <Section id="home" className="section-padding bg-brand-beige dark:bg-dark-bg">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -151,30 +215,30 @@ export default function App() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <span className="inline-block px-4 py-1.5 bg-brand-light-green/30 text-brand-dark-green rounded-full text-sm font-semibold mb-6">
+            <span className="inline-block px-4 py-1.5 bg-brand-light-green/30 text-brand-dark-green dark:text-dark-text rounded-full text-sm font-semibold mb-6">
               Available for New Projects
             </span>
-            <h1 className="text-5xl md:text-7xl font-display text-brand-deep-forest leading-tight mb-6">
+            <h1 className="text-5xl md:text-7xl font-display text-brand-deep-forest dark:text-dark-text leading-tight mb-6">
               Jimboy  
-              <span className="text-brand-green"> C. </span>Leyva
+              <span className="text-brand-green dark:text-brand-light-green"> C. </span>Leyva
             </h1>
-            <p className="text-lg text-brand-dark-green/80 mb-8 max-w-lg leading-relaxed">
+            <p className="text-lg text-brand-dark-green/80 dark:text-dark-text/80 mb-8 max-w-lg leading-relaxed">
               I'm a creative developer focused on building beautiful, functional, and user-centered digital products. Let's turn your vision into reality.
             </p>
             <div className="flex flex-wrap gap-4">
-              <a href="#projects" className="px-8 py-4 bg-brand-deep-forest text-brand-beige rounded-xl font-bold flex items-center gap-2 hover:bg-brand-green transition-colors shadow-md">
+              <a href="#projects" className="px-8 py-4 bg-brand-deep-forest dark:bg-brand-green text-brand-beige rounded-xl font-bold flex items-center gap-2 hover:bg-brand-green dark:hover:bg-brand-light-green transition-colors shadow-md">
                 View Work <ArrowRight size={20} />
               </a>
               <a 
                 href="/CV - JIMBOY LEYVA.pdf" 
                 download="CV - JIMBOY LEYVA.pdf"
-                className="px-8 py-4 bg-white/50 border border-brand-green/30 text-brand-deep-forest rounded-xl font-bold flex items-center gap-2 hover:bg-brand-light-green/30 transition-all shadow-sm"
+                className="px-8 py-4 bg-white/50 dark:bg-dark-card border border-brand-green/30 text-brand-deep-forest dark:text-dark-text rounded-xl font-bold flex items-center gap-2 hover:bg-brand-light-green/30 transition-all shadow-sm"
               >
                 Download CV <Download size={20} />
               </a>
               <div className="flex items-center gap-4 px-4">
-                <a href="#" className="text-brand-dark-green hover:text-brand-green transition-colors"><Github size={24} /></a>
-                <a href="#" className="text-brand-dark-green hover:text-brand-green transition-colors"><Linkedin size={24} /></a>
+                <a href="https://github.com/JimboyLeyvva" target="_blank" rel="noopener noreferrer" className="text-brand-dark-green dark:text-dark-muted hover:text-brand-green transition-colors"><Github size={24} /></a>
+                <a href="https://www.linkedin.com/in/jimboy-leyva-195297403/" target="_blank" rel="noopener noreferrer" className="text-brand-dark-green dark:text-dark-muted hover:text-brand-green transition-colors"><Linkedin size={24} /></a>
               </div>
             </div>
           </motion.div>
@@ -186,11 +250,7 @@ export default function App() {
             className="relative"
           >
             <div className="w-full aspect-square md:aspect-[4/5] bg-brand-light-green rounded-[2rem] overflow-hidden relative shadow-2xl">
-              {/* This is where the user will put their image */}
-              <div className="absolute inset-0 bg-brand-deep-forest/5 flex flex-col items-center justify-center text-brand-deep-forest/20 p-12 text-center">
-                <Palette size={120} strokeWidth={0.5} />
-                <p className="mt-4 font-medium italic">Your Image Here</p>
-              </div>
+              <img src="/Image/jimboy.jpg" alt="Jimboy Leyva" className="w-full h-full object-cover object-top" />
             </div>
             {/* Decorative elements */}
             <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-brand-green rounded-full blur-3xl opacity-30"></div>
@@ -200,7 +260,7 @@ export default function App() {
       </Section>
 
       {/* About Section */}
-      <Section id="about" className="section-padding bg-brand-light-green/10">
+      <Section id="about" className="section-padding bg-brand-light-green/10 dark:bg-dark-surface">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -208,8 +268,8 @@ export default function App() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl mb-6">About Me</h2>
-            <p className="text-lg text-brand-dark-green/80 leading-relaxed max-w-3xl mx-auto">
+            <h2 className="text-4xl md:text-5xl mb-6 text-brand-deep-forest dark:text-dark-text">About Me</h2>
+            <p className="text-lg text-brand-dark-green/80 dark:text-dark-text/70 leading-relaxed max-w-3xl mx-auto">
               My journey is defined by a commitment to continuous learning and professional growth. Here is a look at my academic background and the experiences that have shaped my career.
             </p>
           </motion.div>
@@ -221,7 +281,7 @@ export default function App() {
                 <div className="p-2 bg-brand-green text-brand-beige rounded-lg">
                   <Globe size={24} />
                 </div>
-                <h3 className="text-2xl font-display">Education</h3>
+                <h3 className="text-2xl font-display text-brand-deep-forest dark:text-dark-text">Education</h3>
               </div>
               
               <div className="space-y-8 relative before:absolute before:left-[19px] before:top-2 before:bottom-0 before:w-0.5 before:bg-brand-green/20">
@@ -263,14 +323,14 @@ export default function App() {
                     transition={{ delay: i * 0.1 }}
                     className="relative pl-12"
                   >
-                    <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white rounded-full border-4 border-brand-light-green flex items-center justify-center z-10">
+                    <div className="absolute left-0 top-1.5 w-[40px] h-[40px] bg-white dark:bg-dark-card rounded-full border-4 border-brand-light-green dark:border-dark-border flex items-center justify-center z-10">
                       <div className="w-2 h-2 bg-brand-green rounded-full"></div>
                     </div>
                     <div>
                       <span className="text-xs font-bold uppercase tracking-widest text-brand-green mb-1 block">{edu.level}</span>
-                      <h4 className="text-lg font-bold text-brand-deep-forest">{edu.degree}</h4>
-                      <p className="text-brand-dark-green font-medium mb-2">{edu.school} | {edu.year}</p>
-                      <p className="text-sm text-brand-dark-green/70 leading-relaxed">{edu.description}</p>
+                      <h4 className="text-lg font-bold text-brand-deep-forest dark:text-dark-text">{edu.degree}</h4>
+                      <p className="text-brand-dark-green dark:text-dark-muted font-medium mb-2">{edu.school} | {edu.year}</p>
+                      <p className="text-sm text-brand-dark-green/70 dark:text-dark-muted/70 leading-relaxed">{edu.description}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -283,7 +343,7 @@ export default function App() {
                 <div className="p-2 bg-brand-deep-forest text-brand-light-green rounded-lg">
                   <Code2 size={24} />
                 </div>
-                <h3 className="text-2xl font-display">Experience</h3>
+                <h3 className="text-2xl font-display text-brand-deep-forest dark:text-dark-text">Experience</h3>
               </div>
 
               <div className="space-y-8 relative before:absolute before:left-[19px] before:top-2 before:bottom-0 before:w-0.5 before:bg-brand-deep-forest/10">
@@ -312,11 +372,11 @@ export default function App() {
                     </div>
                     <div>
                       <span className="text-xs font-bold uppercase tracking-widest text-brand-green mb-1 block">{exp.period}</span>
-                      <h4 className="text-lg font-bold text-brand-deep-forest">{exp.role}</h4>
-                      <p className="text-brand-dark-green font-medium mb-3">{exp.company}</p>
+                      <h4 className="text-lg font-bold text-brand-deep-forest dark:text-dark-text">{exp.role}</h4>
+                      <p className="text-brand-dark-green dark:text-dark-muted font-medium mb-3">{exp.company}</p>
                       <ul className="space-y-2">
                         {exp.tasks.map((task, j) => (
-                          <li key={j} className="text-sm text-brand-dark-green/70 flex gap-2">
+                          <li key={j} className="text-sm text-brand-dark-green/70 dark:text-dark-muted flex gap-2">
                             <span className="text-brand-green mt-1.5">•</span>
                             {task}
                           </li>
@@ -332,13 +392,13 @@ export default function App() {
       </Section>
 
       {/* Projects Section */}
-      <Section id="projects" className="section-padding bg-white">
+      <Section id="projects" className="section-padding bg-white dark:bg-dark-bg">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
-            <h2 className="text-4xl md:text-5xl mb-4">Selected Work</h2>
-            <p className="text-brand-dark-green/70 max-w-md">A collection of projects that define my passion for solving complex problems through design.</p>
+            <h2 className="text-4xl md:text-5xl mb-4 text-brand-deep-forest dark:text-dark-text">Selected Work</h2>
+            <p className="text-brand-dark-green/70 dark:text-dark-muted max-w-md">A collection of projects that define my passion for solving complex problems through design.</p>
           </div>
-          <button className="text-brand-deep-forest font-bold flex items-center gap-2 hover:text-brand-green transition-colors">
+          <button className="text-brand-deep-forest dark:text-dark-text font-bold flex items-center gap-2 hover:text-brand-green transition-colors">
             View all projects <ArrowRight size={18} />
           </button>
         </div>
@@ -366,7 +426,7 @@ export default function App() {
                 </div>
                 <div>
                   <p className="text-xs text-brand-beige/40 uppercase tracking-widest font-bold">Email me</p>
-                  <p className="text-lg font-medium">hello@yourportfolio.com</p>
+                  <p className="text-lg font-medium">leyvajimboy1@gmail.com</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -375,45 +435,69 @@ export default function App() {
                 </div>
                 <div>
                   <p className="text-xs text-brand-beige/40 uppercase tracking-widest font-bold">Connect</p>
-                  <p className="text-lg font-medium">linkedin.com/in/username</p>
+                  <a href="https://www.linkedin.com/in/jimboy-leyva-195297403/" target="_blank" rel="noopener noreferrer" className="text-lg font-medium hover:text-brand-light-green transition-colors">linkedin.com/in/jimboy-leyva</a>
                 </div>
               </div>
             </div>
           </div>
 
           <motion.form 
+            ref={formRef}
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             className="bg-white/5 p-8 md:p-12 rounded-3xl border border-white/10"
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={handleSend}
           >
             <div className="grid gap-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-brand-beige/60">Name</label>
-                <input type="text" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-light-green transition-colors" placeholder="John Doe" />
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-light-green transition-colors"
+                  placeholder="John Doe"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-brand-beige/60">Email</label>
-                <input type="email" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-light-green transition-colors" placeholder="john@example.com" />
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-light-green transition-colors"
+                  placeholder="john@example.com"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-brand-beige/60">Message</label>
-                <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-light-green transition-colors resize-none" placeholder="Tell me about your project..."></textarea>
+                <textarea
+                  rows={4}
+                  required
+                  value={formData.message}
+                  onChange={e => setFormData({ ...formData, message: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-brand-light-green transition-colors resize-none"
+                  placeholder="Tell me about your project..."
+                ></textarea>
               </div>
-              <button className="w-full py-4 bg-brand-light-green text-brand-deep-forest rounded-xl font-bold hover:bg-white transition-colors">
-                Send Message
+              {sent && <p className="text-brand-light-green text-sm font-medium">✓ Message sent successfully!</p>}
+              {sendError && <p className="text-red-400 text-sm font-medium">{sendError}</p>}
+              <button
+                type="submit"
+                disabled={sending}
+                className="w-full py-4 bg-brand-light-green text-brand-deep-forest rounded-xl font-bold hover:bg-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {sending ? 'Sending...' : 'Send Message'}
               </button>
             </div>
           </motion.form>
         </div>
 
         <footer className="mt-24 pt-12 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-brand-beige/40">
-          <p>© 2024 Your Portfolio. All rights reserved.</p>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-brand-light-green transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-brand-light-green transition-colors">Terms of Service</a>
-          </div>
+          <p>© 2026 Jimboy Leyva Portfolio. All rights reserved.</p>
         </footer>
       </Section>
     </div>
