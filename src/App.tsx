@@ -1,5 +1,5 @@
-import { motion } from 'motion/react';
-import { Github, Linkedin, Mail, ArrowRight, ExternalLink, Code2, Palette, Globe, Download, Sun, Moon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Github, Linkedin, Mail, ArrowRight, ExternalLink, Code2, Palette, Globe, Download, Sun, Moon, Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
 import emailjs from '@emailjs/browser';
@@ -86,6 +86,7 @@ const ProjectCard = ({ project }: { project: { title: string; description: strin
 export default function App() {
   const [activeNav, setActiveNav] = useState('home');
   const [darkMode, setDarkMode] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -179,6 +180,7 @@ export default function App() {
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl">
         <div className="bg-brand-deep-forest/90 dark:bg-dark-surface/95 backdrop-blur-md rounded-full px-6 py-3 flex items-center justify-between shadow-lg border border-white/10">
           <div className="text-brand-beige font-display font-bold text-xl tracking-tight">PORTFOLIO</div>
+          {/* Desktop links */}
           <div className="hidden md:flex gap-8">
             {navItems.map(item => (
               <a
@@ -201,9 +203,43 @@ export default function App() {
             >
               {darkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <a href="#contact" className="md:hidden text-brand-beige"><Mail size={20} /></a>
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-brand-beige transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
           </div>
         </div>
+        {/* Mobile dropdown */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden mt-2 bg-brand-deep-forest/95 dark:bg-dark-surface/95 backdrop-blur-md rounded-2xl px-4 py-4 flex flex-col gap-2 shadow-lg border border-white/10"
+            >
+              {navItems.map(item => (
+                <a
+                  key={item.id}
+                  href={`#${item.id}`}
+                  onClick={() => { setActiveNav(item.id); setMenuOpen(false); }}
+                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                    activeNav === item.id
+                      ? 'bg-white/10 text-brand-light-green'
+                      : 'text-brand-beige/70 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Home Section */}
